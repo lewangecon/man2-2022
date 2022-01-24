@@ -1,0 +1,134 @@
+---
+title: "Conditional Distribution for More than Two Variables"
+output: html_notebook
+---
+
+Our goal is eventually use the data with information `race`, `gender`, and `age` to calculate the following conditional distribution
+
+$$
+\Pr[\text{Race and Gender} \mid \text{Age}] = \frac{\Pr[\text{Race, Gender, and Age}]}{\Pr[\text{Age}]}
+$$
+
+Let's read our data into `R` first. You need to create a folder called `data` and save the files into this folder. Make sure your program is in the same folder as the data folder. 
+
+```{r}
+cnames<-read.csv("data/cnames.csv") 
+FLvoters<-read.csv("data/FLvoters.csv")
+```
+
+
+Let's omit the missing values in the dataset 
+
+```{r}
+FLvoters <- na.omit(FLvoters)
+```
+
+Let's examine the dataset
+```{r}
+str(FLvoters)
+```
+
+
+
+As we can see, `age` is a continuous variable. Let's discretize it first so that we can directly apply our formula. 
+
+```{r}
+FLvoters$age.group<- NA
+FLvoters$age.group[FLvoters$age <= 20] <- 1
+FLvoters$age.group[FLvoters$age > 20 & FLvoters$age <= 40] <- 2
+FLvoters$age.group[FLvoters$age > 40 & FLvoters$age <= 60] <- 3
+FLvoters$age.group[FLvoters$age >60] <- 4
+```
+
+Or, you can use the tidy approach:
+
+```{r}
+library(tidyverse)
+FLvoters <- FLvoters %>% 
+  mutate(
+    age.group2 = case_when(
+      age <= 20 ~ 1,
+      age >20 & age<=40  ~ 2,
+      age >40 & age<=60  ~ 3,
+      age>60 ~ 4
+    )
+  )
+```
+
+Lets check if these two approaches are equilvalent. 
+
+```{r}
+table(FLvoters$age.group2, FLvoters$age.group)
+```
+
+
+
+```{r}
+summary(FLvoters)
+```
+
+
+Now all the variables of interest are discrete. The process is exactly the same. Just now, we need to put three variables in our `table()` command and compute the joint distribution of all three. 
+
+```{r}
+mytable<-table(race=FLvoters$race,
+               age.group=FLvoters$age.group, 
+               gender=FLvoters$gender)
+```
+
+```{r}
+joint.dist <- prop.table(mytable)
+```
+
+The joint distribution is inevitably more complicated
+
+```{r}
+joint.dist
+```
+
+Remember that in order to calculate the conditional distribution, we also need the marginal distribution of the conditioning variable(s). 
+
+But the following code is
+
+
+Not as convenient
+
+
+!!!!
+
+```{r}
+addmargins(joint.dist)
+```
+
+Why? Because it calculates the marginal distribution for each sub-table as well. 
+
+```{r}
+margin.dist.age <- prop.table(table(FLvoters$age.group))
+margin.dist.age
+```
+
+Suppose that we are interested in 
+
+$$
+\begin{aligned}
+\Pr[\text{black and female}|\text{above 60}] &=\frac{\Pr[\text{Black and above 60 and female}]}{\Pr[\text{above 60}]}\\
+ &=\frac{0.0188741358}{0.35092725}
+\end{aligned}
+$$
+
+```{r}
+joint.dist["black",4,"f"]/margin.dist.age[4]
+```
+
+Or, we can calculate the following conditional distribution for all race and gender combinations by not specifying the first and third dimensions!
+
+$$
+\begin{aligned}
+\Pr[\text{Race and Gender}|\text{above 60}] &=\frac{\Pr[\text{Race and above 60 and Gender}]}{\Pr[\text{above 60}]}
+\end{aligned}
+$$
+
+```{r}
+joint.dist[,4,]/margin.dist.age[4]
+```
+

@@ -1,0 +1,513 @@
+---
+title: "Introduction to Writing R Functions"
+author: "Le Wang"
+date: "4/15/2017"
+output: beamer_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Motivation
+
+As in most programming languages, the heart of `R` programming consists of writing *functions*.  
+
+One purpose of writing an function is to avoid or simplify repetitive tasks. It is more elegant and cleaner.  
+
+## Differences between Stata and R
+
+In Stata, we *usually* don’t write functions; we execute built-in commands like `browse` or `gen` or `logit`. You can write an `.ado` file to make a new command. 
+
+In R, there are built-in functions like `summary()` or `glm()` or `median()`, but you can also write your own functions. 
+
+## Motivation: Example
+
+Suppose that we would like to calculate the mean of a variable or even more variables.
+
+```{r wasup, echo=FALSE}
+set.seed(123456)
+x1<-rnorm(100)
+x2<-rnorm(100)
+x3<-rnorm(100)
+```
+
+```{r wasup2, size='footnotesize'}
+N   <- length(x1)
+sum <- sum(x1)
+mean <- sum/N
+
+N   <- length(x2)
+sum <- sum(x2)
+mean <- sum/N
+
+N   <- length(x3)
+sum <- sum(x3)
+mean <- sum/N
+```
+
+## Motivation
+
+Anticipating that we may have to repeat this process many times in the future, we can write a function to execute the whole thing for us. 
+
+A function is a group of **instructions** that **take inputs**, uses them to **compute other values**, and **returns a result**. It usually takes the following form
+
+```{r, eval=FALSE, size='footnotesize'}
+mymean <- function(x){
+  
+  instructions to compute certain values
+  
+  return(some values)
+  
+}
+```
+
+Then, you call the function for your own case by typing 
+
+```{r, eval=FALSE}
+mymean(x1)
+```
+
+## Distinct Elements in an R function
+
+```{r, eval=FALSE, size='footnotesize'}
+mymean <- function(x){
+  
+  instructions to compute certain values
+  
+  return(some values)
+  
+}
+```
+
+1. Function name
+2. Required Input (**formal arguments**). They are simply *placeholders* for **actual arguments**.
+3. Instructions or Body of Code
+
+## First Step: What is common and What is not
+
+Perform the task for sepcific cases several times to detect 
+
+1. What changes: usually would be the **input** that comes from an user. 
+2. What does not: usually would be the body inside the function.  
+
+## First Step:
+
+```{r, size='footnotesize'}
+N   <- length(x1)
+sum <- sum(x1)
+mean <- sum/N
+
+N   <- length(x2)
+sum <- sum(x2)
+mean <- sum/N
+
+N   <- length(x3)
+sum <- sum(x3)
+mean <- sum/N
+```
+
+1. What changes? **Variable name**
+2. What does not change? The procedure to calculate the mean
+
+## Second Step: Program Structure
+
+```{r, eval=FALSE}
+mymean <- function(){
+
+  # Calculate the mean
+  
+  
+  # Return the mean
+  return(mean)
+}
+```
+
+
+## Third Step: Filling in the main code
+
+```{r, eval=FALSE}
+mymean <- function(){
+
+  # Calculate the mean
+  N   <- length(_____)
+  sum <- sum(____)
+  mean <- sum/N  
+  
+  # Return the mean
+  return(mean)
+}
+```
+
+## Fourth Step: Giving a placeholder
+
+```{r, eval=FALSE}
+mymean <- function(var){
+
+  # Calculate the mean
+  N   <- length(var)
+  sum <- sum(var)
+  mean <- sum/N  
+  
+  # Return the mean
+  return(mean)
+}
+```
+
+## Fourth Step: Giving a placeholder
+
+```{r, eval=FALSE}
+mymean <- function(x){
+
+  # Calculate the mean
+  N   <- length(x)
+  sum <- sum(x)
+  mean <- sum/N  
+  
+  # Return the mean
+  return(mean)
+}
+```
+
+## Final Step: Use it!
+
+```{r, size='footnotesize'}
+mymean <- function(x){
+
+  # Calculate the mean
+  N   <- length(x)
+  sum <- sum(x)
+  mean <- sum/N  
+  
+  # Return the mean
+  return(mean)
+}
+
+mymean(x1)
+mean(x1)
+```
+
+## Final Step: Use it!
+```{r,size='footnotesize'}
+mymean(x2)
+mean(x2)
+
+mymean(x3)
+mean(x3)
+```
+
+## Example 2: KNN Estimator
+
+**Goal**: 
+
+\bigskip
+
+We would like to use the average wages of the K-nearest neighors for my prediction. 
+
+\bigskip
+**Translations:**
+
+1. Find out the K-nearest neighbors
+2. Calculate the average wages. 
+
+## Example 2: KNN Estimator
+
+**Question**: How to find out the K-nearest neighbors
+
+1. Distance measures between all the observations and your value $x$
+2. Find out where the closest $K$ values are (index/position)
+
+```{r,echo=FALSE, message=FALSE}
+library(readr)
+wage2 <- read_csv("data/wage2.csv")
+attach(wage2)
+````
+
+```{r}
+# Distance
+d <- abs(IQ-60)
+# List the data from the smallest
+order(d)[1:3]
+neighbor<-order(d)[1:3]
+mean<-mean(wage[neighbor])
+mean
+```
+
+## Example 2: KNN Estimator
+Let's see more special cases and find out what can change
+
+```{r}
+# Distance
+d <- abs(IQ-80)
+# List the data from the smallest
+order(d)[1:3]
+neighbor<-order(d)[1:3]
+mean<-mean(wage[neighbor])
+mean
+```
+
+## Example 2: KNN Estimator
+Let's see more special cases and find out what can change
+
+```{r}
+# Distance
+d <- abs(IQ-100)
+# List the data from the smallest
+order(d)[1:3]
+neighbor<-order(d)[1:3]
+mean<-mean(wage[neighbor])
+mean
+```
+
+## Example 2: KNN Estimator
+Let's see more special cases and find out what can change
+
+```{r}
+# Distance
+d <- abs(IQ-100)
+# List the data from the smallest
+order(d)[1:5]
+neighbor<-order(d)[1:5]
+mean<-mean(wage[neighbor])
+mean
+```
+
+## Example 2: KNN Estimator
+
+```{r}
+# Distance
+d <- abs(IQ-80)
+# List the data from the smallest
+order(d)[1:3]
+neighbor<-order(d)[1:3]
+mean<-mean(wage[neighbor])
+mean
+```
+
+What can change? 
+
+1. The value of the predictor that you calculate the conditional mean for 
+2. The definition of *closedness*: $K$. 
+
+## Example 2: KNN Estimator
+
+```{r,eval=FALSE}
+# Distance
+d <- abs(IQ-_______)
+# List the data from the smallest
+order(d)[1:_______]
+neighbor<-order(d)[1:_______]
+mean<-mean(wage[neighbor])
+mean
+```
+
+What can change? 
+
+1. The value of the predictor that you calculate the conditional mean for 
+2. The definition of *closedness*: $K$. 
+
+## Step 2: Program Structure
+
+```{r, eval=FALSE}
+myKNN <- function(){
+
+  # Calculate the mean
+  
+  
+  # Return the mean
+  return(mean)
+}
+```
+
+## Step 3: Filling in the main code
+
+```{r, eval=FALSE}
+myKNN <- function(){
+
+  # Distance
+  d <- abs(IQ-_______)
+  # List the data from the smallest
+  order(d)[1:_______]
+  neighbor<-order(d)[1:_______]
+  mean<-mean(wage[neighbor])  
+  
+  # Return the mean
+  return(mean)
+}
+```
+
+## Step 4: Giving it Two Placeholders!
+
+```{r, eval=FALSE}
+myKNN <- function(x,K){
+
+  # Distance
+  d <- abs(IQ-x)
+  # List the data from the smallest
+  order(d)[1:K]
+  neighbor<-order(d)[1:K]
+  mean<-mean(wage[neighbor])  
+  
+  # Return the mean
+  return(mean)
+}
+```
+
+## Final Step: Use it!
+
+```{r}
+myKNN <- function(x,K){
+
+  # Distance
+  d <- abs(IQ-x)
+  # List the data from the smallest
+  order(d)[1:K]
+  neighbor<-order(d)[1:K]
+  mean<-mean(wage[neighbor])  
+  
+  # Return the mean
+  return(mean)
+}
+myKNN(60,3)
+```
+
+## Applications of What we use
+
+e.g., 
+
+`order()` can be used to pick out your recommendation for Airnb clients.
+
+`order()` can be used to pick out the furthest neighbors. (How to change the option so that the results are in the decreasing order?)
+
+## Quiz: Question 1
+
+Writen an `R` function to calculate the square of any number and return it. Call this function `square.it()`
+
+```{r}
+1^2
+2^2
+3^2
+4^2
+```
+
+```{r}
+
+```
+
+
+## Quiz: Question 2 
+
+Write an `R` function to calculate sample variance. Call this function `myvar()`
+$$
+\frac{1}{N-1} \sum (x_i-\bar{x})^2
+$$
+```{r}
+set.seed(123456)
+x<-rnorm(1000)
+var(x)
+```
+
+```{r}
+myvar <- function(){
+  
+  # calculate sample mean
+  
+  # construct a new variable that is the square 
+  # of the difference between a variable and its sample mean
+  
+  # calculate sum
+  
+  # Calculate the lenght of the data, N
+  
+  # Divide sum by N-1
+  
+  var <-
+  
+  
+  return(var)
+}
+
+myvar(x1)
+
+```
+
+## Building More Complex R functions
+
+We can build on what we have to create new functions. 
+
+\bigskip 
+
+A function that calls another function that calls another function and so on. 
+\bigskip
+
+**Task:** Suppose that we would like to build a function for **sample conditional variance**
+
+## Goals
+
+Remember that **conditional** is nothing but a sub-sample. We can select the sub-sample and then calculate the sample variance using our code for sample variance. 
+
+```{r}
+aggregate(wage,by=list(black),FUN=var)
+
+# Black
+aggregate(wage,by=list(black),FUN=var)[1,2]
+
+# Non-Black
+aggregate(wage,by=list(black),FUN=var)[2,2]
+```
+
+## Conditional Statement in R
+
+```{r, eval=FALSE}
+if (condition 1) {
+    statement 1
+} else if (condition 2) {
+    statement 2
+} else {
+    statement 3
+}
+```
+
+## Conditional Statement in R
+
+```{r, eval=FALSE}
+if (an indivdidual is black) {
+    variance for black
+} else {
+    variance for non-black
+}
+```
+
+## Conditional Statement in R
+
+```{r, eval=FALSE}
+aggregate(wage,by=list(black),FUN=var)
+
+if (_______ == 1) {
+  aggregate(wage,by=list(black),FUN=var)[2,2]
+} else {
+  aggregate(wage,by=list(black),FUN=var)[1,2]
+}
+```
+
+
+## Conditional Variance
+
+```{r}
+mycvar <- function(x){
+  
+  aggregate(wage,by=list(black),FUN=var)
+  
+  if (x == 1) {
+    cvar<-aggregate(wage,by=list(black),FUN=var)[2,2]
+  } else {
+    cvar<-aggregate(wage,by=list(black),FUN=var)[1,2]
+  }  
+  
+  return(cvar)
+}
+
+mycvar(1)
+
+```
+

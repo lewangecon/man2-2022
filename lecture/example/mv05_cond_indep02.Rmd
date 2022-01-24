@@ -1,0 +1,481 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+We will combine information from Census Name data `cnames` and Florida Census data `FLcensus` to predict ethnic outcomes for the Florida voters data, in which we already have information on individual self-reported (true) outcome to evaluate our accuracy. 
+
+## Step 1. First look at the Florida data
+
+
+We will read the data
+
+```{r}
+cnames<-read.csv("data/cnames.csv")
+FLvoters<-read.csv("data/FLvoters.csv")
+FLcensus<-read.csv("data/FLCensusVTD.csv")
+dim(FLvoters)
+
+```
+
+
+Lets examine the structure of the data (Note that this is individual data that contain the joint distribution and of course we can recover everything that we need.)
+
+```{r}
+head(FLvoters)
+```
+
+
+```{r}
+head(cnames)
+```
+
+
+```{r}
+head(FLcensus)
+```
+
+**Question:** What information do we have in each dataset?
+
+$$
+\begin{aligned}
+& \Pr[\text{Race} \mid \text{Surname}] \\
+& \Pr[\text{Surname} \mid \text{Race}] \\
+& \Pr[\text{Race} \mid \text{Surname, Residence}] \\
+& \Pr[\text{Race} \mid \text{Residence}] \\
+\end{aligned}
+$$
+
+## Step 2. Clean up the data a bit
+
+### Preliminary: Matching Data
+
+We will drop those data points that are NOT matched to the census names. 
+
+**Approach #1:** Let's learn how to select data using `match()`
+
+```{r}
+x<-c("blue","white","red")
+y<-c("black","blue")
+
+# Give me the corresponding position in y
+match(x,y)
+
+# Give me the corresponding position in x
+match(y,x)
+```
+
+If I would like to select only x values matched to y, then I will use the following code
+
+```{r}
+!is.na(match(x,y))
+
+```
+
+
+```{r}
+x[!is.na(match(x,y))]
+```
+
+**Approach #2: Tidy Approach**
+
+```{r}
+library(dplyr)
+x<-data.frame(x=c("blue","white","red"))
+y<-data.frame(y=c("black","blue"))
+
+x %>% 
+  filter(x %in% y$y)
+```
+
+### Clean Our Data
+
+Keep only those surnames that can be matched to the Census Data
+
+**Approach #1**
+
+```{r}
+FLvoters <- FLvoters[!is.na(match(FLvoters$surname,cnames$surname)),]
+```
+
+**Approach #2**
+
+```{r}
+FLvoters <- FLvoters %>% 
+  filter(surname %in% cnames$surname)
+```
+
+
+Let's drop missing values
+
+```{r}
+FLvoters<-na.omit(FLvoters)
+dim(FLvoters)
+```
+
+
+Lets combine the percentage of other races
+
+```{r}
+cnames$pctothers<-100-(cnames$pctapi+cnames$pctblack+cnames$pctwhite+cnames$pcthispanic)
+head(cnames)
+```
+
+## Step 3: Prediction
+
+$$
+\Pr[\text{race} \mid \text{surname}]
+$$
+
+1. Split the data by races. For example, whites and blacks. 
+
+```{r}
+whites <- subset(FLvoters,subset = (race == "white")) 
+head(whites)
+```
+
+
+2. Match the Florida data and the Census data using surname.
+
+```{r}
+w.indx <- match(whites$surname, cnames$surname)
+head(whites)
+head(w.indx)
+```
+
+
+For example, the first person is PIEDRA, and this surname appears as the $8610^{th}$ person in the Census data.
+
+```{r}
+head(cnames)
+```
+
+
+```{r}
+head(whites)
+
+```
+
+
+```{r}
+cnames[8610,]
+```
+
+
+
+3. For the sample of whites (census names corresponding to whites), the maximum of conditional probabilities should be the conditional probabilitiy of being white given the surname.
+
+$$
+\max\{\text{pctwhite,pctblack,pctapi,pcthispanic}\}=\text{pctwhite}
+$$
+
+Example
+
+```{r}
+cnames[8610,]
+```
+
+```{r}
+max(cnames[8610, c("pctwhite","pctblack","pctapi","pctaian","pct2prace","pcthispanic")])
+```
+
+Is it equal to the percentage white? Or, is the percentage of whites the largest number? 
+
+```{r}
+max(cnames[8610, c("pctwhite","pctblack","pctapi","pctaian","pct2prace","pcthispanic")]) == cnames$pctwhite[8610]
+```
+
+Then we know we did not predict correctly. Lets do it for every osbervation then. 
+
+```{r}
+# Pick our relevant variables, which should sum to 100 
+vars<-c("pctwhite","pctblack","pctapi","pctaian","pct2prace","pcthispanic")
+
+cnames[w.indx, vars]
+```
+
+
+```{r}
+
+
+#Calculate the maximum and compare it to the cond prob of being
+# whites
+
+#apply(cnames[w.indx, vars], 1, max)
+
+head(apply(cnames[w.indx, vars], 1, max) )
+
+comparison<-apply(cnames[w.indx, vars], 1, max) == cnames$pctwhite[w.indx]
+head(comparison)
+
+```
+
+
+
+Lets look at how we should use `apply()` in R. see mv05_cond_indep03_apply.Rmd
+
+
+
+
+4. The success rates are defined as the instances when these two are indeed the same. 
+
+```{r}
+comparison
+```
+
+
+```{r}
+mean(comparison)
+```
+
+
+5. We repeat the process (3) and (4) for other races. 
+
+
+```{r}
+# We can repeat the process for other races
+# Blacks 
+
+blacks<- subset(FLvoters, subset = (race == "black")) 
+b.indx<-match(blacks$surname,cnames$surname) 
+mean(apply(cnames[b.indx, vars], 1, max) == cnames$pctblack[b.indx])
+
+```
+
+
+```{r}
+# Asians 
+asians <- subset(FLvoters, subset = (race == "asian")) 
+a.indx<- match(asians$surname, cnames$surname) 
+mean(apply(cnames[a.indx, vars], 1, max) == cnames$pctapi[a.indx])
+
+
+```
+
+
+```{r}
+# Hispanics 
+hispanics <- subset(FLvoters, subset = (race == "hispanic")) 
+h.indx <- match(hispanics$surname, cnames$surname) 
+mean(apply(cnames[h.indx, vars], 1, max) == cnames$pcthispanic[h.indx])
+```
+
+
+
+## Step 4: Prediction taking into account more information
+
+Can we improve the precision by incorporating more information, for example, on residence?
+
+$$
+ \Pr[\text{race}|\text{surname,residence}]
+$$
+
+
+
+
+$$
+\Pr[\text{race}|\text{surname,residence}]=\frac{\Pr[\text{surname}|\text{race,residence}]\Pr[\text{race}|\text{residence}]}{\Pr[\text{surname}|\text{residence}]}
+$$
+
+
+What do We have:
+
+$$
+\Pr[\text{race}|\text{surname}] \quad \text{(Census data)}
+$$
+
+```{r}
+head(cnames)
+```
+
+
+$$
+\Pr[\text{race}|\text{residence}] \text{ and } \Pr[\text{residence}] \quad \text{(Florida Census data)}
+$$
+```{r}
+head(FLcensus)
+```
+
+We do not have in these two datasets (note that `FLvoters` is only our validation dataset):
+
+
+$$
+\Pr[\text{surname}\mid \text{race},\text{residence}] 
+$$
+
+$$
+\Pr[\text{surname}\mid \text{residence}] 
+$$
+
+Note that with the application of the Law of Total Probability
+
+we can obtain the second one 
+
+$$
+\begin{aligned}
+& \Pr[\text{surname}|\text{residence}]	\\
+= & \sum\Pr[\text{surname}|\text{race,residence}]\cdot\Pr[\text{race}|\text{residence}] \\
+\end{aligned}
+$$
+Now the key is to obtain 
+$$
+\Pr[\text{surname}\mid \text{race,residence}] 
+$$
+
+We would invoke our conditional independence assumption
+
+$$
+\Pr[\text{surname} \mid \text{race, residence}]=\Pr[\text{surname}\mid \text{race}]
+$$
+
+Does it make sense? Or, when will it be violated? Conditional independence implies that once we know a voter's race, her residence location does not give us any additional information about her surname. 
+
+There is NO strong geographical concentration of certain surnames in Florida within a racial categroy. 
+
+$$
+\begin{aligned}
+& \Pr[\text{surname}|\text{race,}\text{residence}]	\\
+\\
+\\
+= & \Pr[\text{surname}|\text{race}] \\
+\\
+\\
+= & \frac{\Pr[\text{race}|\text{surname}]\Pr[\text{surname}]}{\Pr[\text{race}]}
+\end{aligned}
+$$
+We can obtain these terms:
+
+1. Census data: 
+$$\Pr[\text{race}|\text{surname}] \text{ and } \Pr[\text{surname}]$$ 
+
+```{r}
+head(cnames)
+```
+
+
+2. Florida Census data:
+$$
+\Pr[\text{race}]=\sum_{\text{residence}}\Pr[\text{race}|\text{residence}]\Pr[\text{residence}]
+$$
+```{r}
+head(FLcensus)
+```
+
+
+```{r}
+race.prop <- apply(FLcensus[,c("white", "black", "api", "hispanic", "others")], 
+					2, 
+					weighted.mean, 
+					weights = FLCensus$total.pop)
+race.prop
+```
+
+
+So, if we are interested in 
+$$
+\Pr[\text{surname} \mid \text{race=white}]=\frac{\Pr[\text{white} \mid \text{surname}]\Pr[\text{surname}]}{\Pr[\text{race=white}]}
+$$
+
+```{r}
+head(cnames)
+total.count<- sum(cnames$count)
+
+cnames$name.white <- (cnames$pctwhite/100)*(cnames$count/total.count)/race.prop["white"]
+```
+
+
+```{r}
+head(cnames)
+```
+
+
+```{r}
+cnames$name.black <- (cnames$pctblack/100)*(cnames$count/total.count)/race.prop["black"]
+
+cnames$name.hispanic <- (cnames$pcthispanic/100)*(cnames$count/total.count)/race.prop["hispanic"]
+
+cnames$name.api <- (cnames$pctapi/100)*(cnames$count/total.count)/race.prop["api"]
+
+cnames$name.others <- (cnames$pctothers/100)*(cnames$count/total.count)/race.prop["others"]
+
+```
+
+Lets look at what we have now
+
+```{r}
+head(cnames)
+```
+
+Now let's get the following information
+
+$$
+\begin{aligned}
+& \Pr[\text{surname}|\text{residence}]	\\
+= & \sum\Pr[\text{surname}|\text{race,residence}]\cdot\Pr[\text{race}|\text{residence}] \\
+= & \sum\Pr[\text{surname}|\text{race}]\cdot\Pr[\text{race}|\text{residence}] 
+\end{aligned} 
+$$
+
+Lets merge all the information with our validation dataset
+
+```{r}
+FLvoters<- merge(x=FLvoters, y=FLcensus, by=c("county","VTD"), all= FALSE)
+
+head(FLvoters)
+```
+
+
+```{r}
+indx <- match(FLvoters$surname, cnames$surname) 
+
+FLvoters$name.residence <-cnames$name.white[indx]*FLvoters$white+cnames$name.black[indx]*FLvoters$black+cnames$name.hispanic[indx]*FLvoters$hispanic+cnames$name.api[indx]*FLvoters$api+cnames$name.others[indx]*FLvoters$others 
+head(FLvoters)
+```
+
+
+Finally,
+
+$$
+\begin{aligned}
+ & \Pr[\text{race}|\text{surname,residence}] \\	
+\\
+ = & \frac{\Pr[\text{surname}|\text{race,residence}]\Pr[\text{race}|\text{residence}]}{\Pr[\text{surname}|\text{residence}]} \\
+ \\
+&	= \frac{\Pr[\text{surname}|\text{race}]\Pr[\text{race}|\text{residence}]}{\Pr[\text{surname}|\text{residence}]}
+
+\end{aligned}
+$$
+
+For example, 
+$$
+\begin{aligned}
+& \Pr[\text{white}|\text{surname,residence}] \\
+\\
+= & \frac{\Pr[\text{surname}|\text{white}]\Pr[\text{white}|\text{residence}]}{\Pr[\text{surname}|\text{residence}]}
+\end{aligned}
+$$
+
+```{r}
+FLvoters$predict.white <- cnames$name.white[indx]*FLvoters$white/FLvoters$name.residence
+FLvoters$predict.black <- cnames$name.black[indx]*FLvoters$black/FLvoters$name.residence
+FLvoters$predict.hispanic <- cnames$name.hispanic[indx]*FLvoters$hispanic/FLvoters$name.residence
+FLvoters$predict.api <- cnames$name.api[indx]*FLvoters$api/FLvoters$name.residence
+FLvoters$predict.others <- cnames$name.others[indx]*FLvoters$others/FLvoters$name.residence
+```
+
+```{r}
+## relevant variables 
+vars1 <- c("predict.white", "predict.black", "predict.hispanic", "predict.api",            "predict.others") 
+
+## whites 
+whites <- subset(FLvoters, subset = (race == "white")) 
+mean(apply(whites[, vars1], 1, max) == whites$predict.white) 
+
+## blacks 
+blacks <- subset(FLvoters, subset = (race == "black")) 
+mean(apply(blacks[, vars1], 1, max) == blacks$predict.black)
+```
+
+

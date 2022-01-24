@@ -1,0 +1,213 @@
+---
+title: "Applications of PCA"
+author: "Le Wang"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(scatterplot3d)
+```
+
+## In-class Example
+
+Lets use our artificial data first
+
+```{r}
+library(tidyverse)
+
+data <- tribble(
+  ~x, ~y,
+  #=,==,
+  -20, -8,
+  -10,-1,
+  0,0,
+  10,1,
+  20,8
+)
+
+```
+
+### Step 1 
+
+Calculate the variance-covariance matrix
+
+```{r}
+cov <- cov(data)
+cov
+```
+
+### Step 2 
+
+Obtain eigenvalues and eigenvectors
+
+```{r}
+eigen <- eigen(cov)
+str(eigen)
+```
+
+Note that in `R`, the eigenvalues are always returned in decreasing order, and each column of vectors corresponds to the elements in values.
+
+```{r}
+V <- eigen$vectors
+d <- eigen$values
+d
+```
+
+Note that eigenvectors and eigevalues toegether can back out original variance covariance matrix using the formula
+$$
+A = VDV^{-1}
+$$
+
+```{r}
+V%*%diag(d)%*%solve(V)
+```
+
+### Step 3
+
+```{r}
+as.matrix(data)%*%V[,1]
+```
+
+
+Finally lets plot the dimension reduction
+
+```{r}
+ggplot(data = data, aes(x=x, y = y)) +
+  geom_point() + 
+  geom_abline(intercept = 0, slope = 0.3256631/0.9454859, color="red", 
+              linetype="dashed", size=1.5)
+```
+
+
+How do we do?
+
+```{r}
+round(cumsum(d)/sum(d) * 100, 2) # cumulative percentage of retrieved information
+```
+
+We have explained more than 98 percent of the variance, which is a pretty good summary!
+
+
+
+
+### Final Note
+
+Note that any multiples of eigenvectors are eigenvectors, too. For example, lets multiple the first eigenvector by $-1$
+
+```{r}
+V
+V[,1] <- (-1)*V[,1]
+V
+
+```
+
+```{r}
+V%*%diag(d)%*%solve(V)
+```
+
+
+
+## Teapot Example
+
+This example is taken from [Learning Machines by Holger K. von Jouanne-Diedrich](https://blog.ephorie.de/intuition-for-principal-component-analysis-pca). Lets read the data first
+
+```{r}
+# You need to change the directory to where you actually save your own data
+setwd("/Users/lewang/Dropbox/02\ teaching/econ5043/02lectures/lecture2/data")
+dat <- as.matrix(read.csv("teapot.csv", header = FALSE))
+head(dat)
+```
+
+```{r}
+# teapot in 3D
+scatterplot3d(dat[ , 1], dat[ , 2], dat[ , 3], highlight.3d = TRUE, angle = 75, pch = 19, lwd = 15, xlab = "", ylab = "", zlab = "", main = "teapot in 3D")
+```
+
+Lets perform the PCA manually here. Since we are converting this to a 2-D graph, we will take only the first two eigenvectors or principal components. 
+
+```{r}
+# PCA
+(eigenval <- eigen(cov(dat))$values)
+## [1] 2050.6935  747.5764  553.4070
+
+eigenvec <- eigen(cov(dat))$vectors
+# take only the two eigenvectors with biggest eigenvalues
+PCA_2 <- dat %*% eigenvec[ , 1:2] 
+```
+
+
+
+
+```{r}
+plot(PCA_2, ylim = c(50, -55), pch = 19, lwd = 35, col= "blue", xlab = "", ylab = "", main = "teapot in 2D")
+```
+
+
+How do we do here?
+
+```{r}
+round(cumsum(eigenval)/sum(eigenval) * 100, 2) # cumulative percentage of retrieved information
+```
+
+
+## Financial market of fixed income securities
+
+This example is drawn from [Notes by Kurt Hornik](http://statmath.wu.ac.at/~hornik/QFS1/principal_component-vignette.pdf). The data for this analysis are available for download [here](https://github.com/rforge/qfin/blob/master/pkg/Rsafd/data/us.bis.yield.rda). It concerns the market of fixed income securities. In particular, we use the data of the US yield curve provided by the bank of international settlement (BIS). 
+
+Lets first look at our data. Data `us.bis.yield` gives for each trading day, starting at the 3rd of January 1995, the yields on the US
+Treasury bonds for different times to maturity (in months: $x = 0, 1, 2, 3, 4, 5, 5.5, 6.5, 7.5, 8.5, 9.5$)
+
+```{r}
+head(us.bis.yield)
+```
+
+
+```{r}
+dim(us.bis.yield)
+```
+
+The different maturities should be the colnames of our data matrix:
+
+```{r}
+colnames(us.bis.yield) <- c("m0", "m1", "m2", "m3", "m4", "m5", "m5.5", "m6.5", "m7.5", "m8.5", "m9.5")
+```
+
+
+```{r}
+eigen(cov(us.bis.yield))
+```
+
+
+Instead of a manual approach, we can also use the built-in function `prcomp` for this purpose. 
+
+```{r}
+us.bis.yield.pca <- prcomp(us.bis.yield)
+us.bis.yield.pca
+```
+
+We can extract the variances of the three components (the first three Eigenvalues) with
+
+```{r}
+us.bis.yield.pca.var <- us.bis.yield.pca$sdev^2 
+us.bis.yield.pca.var[1:3]
+```
+
+Lets plot the first four principal components for each series
+
+```{r}
+par(mfrow = c(2, 2))
+plot(us.bis.yield.pca$rotation[, 1], ylim = c(-0.7, 0.7)) 
+plot(us.bis.yield.pca$rotation[, 2], ylim = c(-0.7, 0.7)) 
+plot(us.bis.yield.pca$rotation[, 3], ylim = c(-0.7, 0.7)) 
+plot(us.bis.yield.pca$rotation[, 4], ylim = c(-0.7, 0.7))
+```
+
+1. The first loading is essentially flat, so a component on this loading represents the average yield over the maturities. 
+
+2. The monotone nature of the second loading might indicate the trend in the yield curve. 
+
+3. The shape of the third loading suggests that the third component captures the curvature nature of the yield curve. 
+
+4. Finally, the shape of the fourth loading does not seem to have an obvious interpretation. (Remember, that most of the variation is explained by the first three components.)
+

@@ -1,0 +1,65 @@
+---
+title: "Nonparametric Kernel Estimation"
+output: html_notebook
+---
+
+```{r}
+wagedata <- read.csv("data/wage2.csv") 
+```
+
+```{r}
+# Install the package if you have not done so
+# install.package("np")
+library(np)
+```
+
+
+## Step 1.
+Lets estimate the model first
+
+```{r}
+model.np <- npreg(wage ~ IQ + exper,
+                  data = wagedata)
+```
+
+## Step 2. 
+Lets make the dataset for which we would like to make the predictions
+```{r}
+mydata <- data.frame(IQ = c(50, 80, 100), exper = c(7,8,11))
+mydata
+```
+
+## Step 3.
+Using the estimated model, we will make the predictions
+
+```{r}
+predict(model.np, newdata = mydata)
+```
+
+# In the presence of discrete variables (ordered or unordered)
+
+## Step 1.
+
+Note that when you have discrete variables, some are ordered and others unordered, it is important to take into account the nature of such variables. 
+
+```{r}
+model.np <- npreg(wage ~ ordered(IQ) 
+                  + factor(married)
+                  + exper,
+                  data = wagedata)
+```
+
+## Step 2. 
+Lets make the dataset for someone with IQ of 50, experience of 7 years, and currently being married. 
+
+```{r}
+mydata <- data.frame(IQ = c(50), exper = c(7), married = c(1))
+mydata
+```
+
+## Step 3.
+Using the estimated model, we will make the predictions
+
+```{r}
+predict(model.np, newdata = mydata)
+```

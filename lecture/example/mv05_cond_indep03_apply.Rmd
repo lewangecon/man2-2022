@@ -1,0 +1,51 @@
+---
+title: "Degression on `apply()`"
+output: html_notebook
+---
+
+Lets look at how we should use `apply()`. 
+
+Our example
+
+```{r, eval=FALSE}
+apply(cnames[w.indx, vars], 1, max)
+```
+
+1. `cnames[w.indx, vars]`. Grab the observations according to the index with the variables defined by `vars` [draw a graph to explain].
+2. Apply Functions Over Array Margins 
+3. by rows, 1; by columns, 2 
+4. max
+
+[Very good sources](https://nsaunders.wordpress.com/2010/08/20/a-brief-introduction-to-apply-in-r/)
+
+```{r}
+# create a matrix of 5 rows x 2 columns 
+m <- matrix(c(1:5, 11:15), nrow = 5, ncol = 2) 
+m
+
+```
+
+```{r}
+mean(m)
+```
+
+
+```{r}
+# mean of the rows 
+apply(m, 1, mean)  
+
+
+```
+
+
+```{r}
+# mean of the columns 
+apply(m, 2, mean) 
+```
+
+
+```{r}
+# divide all values by 2 
+apply(m, 1:2, function(x) x/2) 
+```
+

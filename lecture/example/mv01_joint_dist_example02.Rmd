@@ -1,0 +1,71 @@
+---
+title: "Tests of Independence"
+author: "Le Wang"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This program illustrates how to perform tests of independence. 
+
+```{r}
+library(MASS)
+head(survey)
+```
+
+## Example 1: Smoking habit and Exercise Levels
+
+```{r}
+mytable <- table(survey$Smoke, survey$Exer)
+mytable
+```
+
+
+Lets perform the $\chi^2$ test of independence:
+```{r}
+chisq.test(mytable)
+```
+
+
+
+The warning message found in the solution above is due to the small cell values in the contingency table. We can combine those small cells, for example,
+
+```{r}
+mytable<-cbind(mytable[,"Freq"],mytable[,"None"]+ mytable[,"Some"])
+mytable
+```
+
+```{r}
+chisq.test(mytable)
+```
+
+
+
+## Example 2: Super Bowl and White Jerseys (in year 2018)
+
+
+Lets manually input the data in superbowl outcomes
+```{r}
+mytable <- matrix(c(33,19,19,33),ncol=2,byrow=TRUE)
+mytable<-as.table(mytable)
+mytable
+```
+
+
+```{r}
+chisq.test(mytable)
+```
+
+
+# Alternative Tests: Fishers Exact Test
+
+```{r}
+fisher.test(mytable)
+```
+
+
+
+# Cochran-Mantel-Haenszel Test of conditional independence (will be discussed later)
+# mantelhaen.test(mytable)

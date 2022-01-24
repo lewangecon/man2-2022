@@ -1,0 +1,206 @@
+---
+title: "Joint and Marginal Distributions"
+author: "Le Wang"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+# Joint Distributions
+
+Here we will play a dice game, **Craps**, as we did last semester, to illustrate concepts related to **Joint** and **Marginal** Distributions
+
+```{r}
+# Step 1: Simulate Data first 
+set.seed(123456) 
+x<-sample(1:6,100000, replace = T) 
+y<-sample(1:6,100000, replace = T)
+```
+
+**Review Questions:**
+
+1. Why `set.seed()`?
+2. What does `sample(, , replace = T)` mean?
+3. From the simulation design, can $x$ and $y$ be related?
+
+
+```{r}
+# Step 2: Calculate counts for each cell 
+mytable<-table(x,y)
+mytable
+```
+
+
+```{r}
+# Step 2.b
+# Alternatively, combine these two into a data frame 
+data<-as.data.frame(cbind(x,y)) 
+head(data)
+```
+
+```{r}
+mytable<-xtabs(~ x+y, data=data)
+mytable
+```
+
+From `R` documentation [here](https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/xtabs), note that `xtabs` is an `R` command to perform cross tabulation, which creates a contingency table (optionally a sparse matrix) from cross-classifying factors, usually contained in a data frame, using a formula interface with the cross-classifying variables (separated by `+`) on the right hand side (or an object which can be coerced to a formula). 
+
+Interactions are not allowed. On the left hand side, one may optionally
+give a vector or a matrix of counts; in the latter case, the columns are interpreted as corresponding to the levels of a variable. This is useful if the data have already been tabulated, as above. 
+
+
+```{r}
+# Step 3: Cell proportions 
+prop.table(mytable)
+```
+
+# Visualization of Joint Distributions
+
+## Vsiualization in 3D
+
+```{r}
+# Install the package if you have not done so
+# install.packages("plot3D")
+library(plot3D)
+```
+
+```{r}
+hist3D(z=mytable, border="black", space = .8)
+```
+
+
+## Visualization in 2D and Mosaic Plot 
+
+We now use **Mosaic plot ** to visualize the joint distribution. To use the command for this purpose, we need to install the `vcd` package. 
+
+```{r}
+# Install the necessary packages first
+# install.packages("vcd")
+```
+
+### Equal Probability
+
+Lets visualize the joint distribution with **equal probability** for each pair of $x$ and $y$ values.
+
+```{r}
+library(vcd)
+mosaic(mytable, shade=TRUE, legend=TRUE)
+
+```
+
+
+### Unequal Probability
+
+Lets simulate a case where the probabilities are unequally distributed over the space of the pairs of $x$ and $y$ values.
+
+
+```{r}
+set.seed(123456)
+x<-sample(0:1,100000, replace = T, prob=c(.2,.8)) 
+data<-data.frame(x, y=NA)
+head(data)
+```
+
+Lets simulate some relationship between $x$ and $y$
+```{r}
+data$y[data$x == 1] <- sample(0:1, sum(data$x == 1), replace = T, prob=c(0.7,0.3)) 
+data$y[data$x == 0] <- sample(0:1, sum(data$x == 0), replace = T, prob=c(0.1,0.9)) 
+head(data)
+```
+
+Now, lets calculate the counts for each pair of values
+
+```{r}
+mytable<-xtabs(~ x+y, data=data)
+mytable
+```
+
+Lets convert these counts to probabilities to obtain the joint distribution.
+
+```{r}
+prop.table(mytable)
+```
+
+
+Once we obtain the joint distribution (counts for each cell), we can now visualize it
+```{r}
+library(vcd)
+mosaic(mytable, shade=TRUE, legend=TRUE)
+```
+
+What do we learn here? We learn two things (which combination is more likely):
+
+1. $X = 1;Y = 0$ is most likely, while $X = 0;Y = 0$ least likely
+2. We will use this to examine the conditional probability (defined later) as well.
+
+## Visualization in 2D and Contour Plot
+
+```{r message=FALSE}
+#install.packages("plotly")
+library(plotly)
+```
+
+
+```{r}
+plot_ly(x = data$x, y = data$y, type = "histogram2dcontour")
+```
+
+## Visualization in 2D and Tile Plot
+
+
+```{r message=FALSE}
+#install.packages("plotly")
+library(tidyverse)
+```
+
+
+```{r}
+data %>%  
+  count(x,y) %>%    
+  ggplot(mapping = aes(x = x, y = y)) +   
+    geom_tile(mapping = aes(fill = n))
+```
+
+# Joint Distribution to Marginal Distribution
+
+```{r}
+prop.table(mytable)
+addmargins(prop.table(mytable))
+```
+
+# Joint Distribution for Continuous Variables
+
+```{r message=FALSE}
+# install.packages("bivariate")
+library(bivariate)
+```
+
+
+```{r}
+# Simulate data from multivariate normal
+set.seed(123456)
+data <-  MASS::mvrnorm(n = 50, 
+                mu = c(1, 5),
+                Sigma = matrix(c(1, 0.5, 0.5, 1), nrow = 2),
+                empirical = TRUE)
+colnames(data) <- c("x", "y")
+data <- as.data.frame(data)
+
+
+
+```
+
+
+
+```{r}
+# Calculate nonparametric joint density (bandwidths)
+f <- kbvpdf (data$x, data$y, 0.7, 7)
+plot (f, TRUE, xlab="x", ylab="y")
+```
+
+
+

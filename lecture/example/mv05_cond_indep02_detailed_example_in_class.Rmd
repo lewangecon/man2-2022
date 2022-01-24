@@ -1,0 +1,133 @@
+---
+title: "Untitled"
+author: "Rui Fan and Le Wang"
+date: "4/1/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+cnames<-read.csv("data/cnames.csv")
+FLvoters<-read.csv("data/FLvoters.csv")
+FLcensus<-read.csv("data/FLCensusVTD.csv")
+FLvoters <- FLvoters[!is.na(match(FLvoters$surname,cnames$surname)),]
+FLvoters<-na.omit(FLvoters)
+cnames$pctothers<-100-(cnames$pctapi+cnames$pctblack+cnames$pctwhite+cnames$pcthispanic)
+dim(FLvoters)
+
+```
+
+
+```{r}
+head(cnames)
+```
+
+
+```{r}
+head(FLvoters)
+```
+
+```{r}
+subset <- subset(FLvoters, surname == "PIEDRA")
+subset
+prop.table(table(subset$race))
+```
+
+```{r}
+head(cnames)
+```
+
+
+```{r}
+subset(cnames, surname == "PIEDRA")
+```
+
+
+
+
+```{r}
+head(FLvoters)
+```
+
+
+```{r}
+subset <- subset(FLvoters, surname == "PIEDRA" & county == 115 & VTD == 66)
+subset
+prop.table(table(subset$race))
+```
+
+```{r}
+head(cnames)
+```
+
+
+
+```{r}
+head(FLcensus)
+```
+
+
+
+```{r}
+subset <- subset(FLcensus, county == 115 & VTD == 66)
+B <- subset$white
+B
+
+B.black <- subset$black
+B.hisp <- subset$hispanic
+B.asian <- subset$api
+B.others <- subset$others
+
+
+```
+
+
+```{r}
+head(cnames)
+```
+
+```{r}
+subset <- subset(cnames, surname == "PIEDRA")
+subset
+A.1 <- subset$pctwhite/100
+A.1
+```
+
+
+```{r}
+A.3 <- subset$count/sum(cnames$count)
+A.3
+```
+
+
+```{r}
+head(FLcensus)
+```
+
+
+```{r}
+race.prop <- apply(FLcensus[,c("white", "black", "api", "hispanic", "others")], 
+					2, 
+					weighted.mean, 
+					weights = FLCensus$total.pop)
+race.prop
+
+A.2 <- race.prop["white"]
+A.2
+```
+
+
+
+
+
+```{r}
+A <- A.1*A.3/A.2
+A
+```
+
+
+
+

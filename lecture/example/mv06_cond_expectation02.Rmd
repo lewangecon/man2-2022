@@ -1,0 +1,124 @@
+---
+title: "Linear Regression and Prediction and Partial Effects (Binary Predictor)"
+output: html_notebook
+---
+
+
+This program illustrates how to estimate linear regression and calculate the CEF for two different purposes
+
+
+```{r}
+wagedata <- read.csv("data/wage2.csv") 
+
+# CEF for each category
+  aggregate(wage,by=list(married),FUN=mean) 
+  results <-aggregate(wage,by=list(married),FUN=mean)[2] 
+```
+
+We also calculated the partial effects
+
+```{r}
+  results[2,1]-results[1,1]
+```
+
+
+
+
+# Linear Regression without intercept
+
+$$
+\text{wage}=\beta_{1}\cdot\text{non-married}+\beta_{2}\cdot\text{married}+\epsilon
+$$
+
+How to implement this in R?
+
+```{r}
+lm(wage ~ factor(married)+0, data=wagedata)
+```
+
+Or, you can use R's built-in command to summarize the results 
+
+```{r}
+results <- lm(wage ~ factor(married)+0, data=wagedata)
+# Linear Regression without intercept
+summary(results)
+```
+
+This model implies that the prediction will be
+
+$$
+\begin{aligned}
+\text{wage}&=\beta_{1}\cdot\text{non-married}+\beta_{2}\cdot\text{married}+\epsilon\\
+ &=798.4400\cdot \text{non-married}+977.0479\cdot\text{married}
+ \end{aligned}
+$$
+
+We can use R to make nice tables
+
+```{r}
+# Use R to make nice tables
+library(knitr)
+kable(summary(results)$coef)
+```
+
+If you are not sure what the coefficients are..let's repeat what we have done earlier. 
+```{r}
+# Obtain Conditional Means
+aggregate(wage,by=list(married),FUN=mean) 
+```
+
+
+What is your prediction if someone is not married? What if someone is married?
+
+```{r}
+# As we did with Naive Bayes Models
+new <- data.frame(married=c(0,1)) 
+predict(results,new)
+
+aggregate(wage,by=list(married),FUN=mean)
+```
+
+What is the partial impact of marriage on wages? The same!
+
+# Linear Regression with intercept
+
+Let's make another model using the exact same information:
+
+$$
+\text{wage}=\beta_{0}+\beta_{1}\cdot\text{married}+\epsilon
+$$
+
+
+
+
+```{r}
+model <- lm(wage ~ married) 
+summary(model)
+```
+
+These estimates imply the following model
+
+$$
+\text{wage}=798.44+ 178.61 \cdot\text{married}
+$$
+
+If you recall, the intercept is exactly the mean wage for non-married individuals, and the slope coefficient on married is exactly the partial effect (i.e., the difference in the mean wages between married and non-married individuals)!
+
+What are the predictions from this model?
+
+```{r}
+# Generate Predictions
+new <- data.frame(married=c(0,1)) 
+predict(model,new)
+```
+
+
+```{r}
+# Obtain Conditional Means
+aggregate(wage,by=list(married),FUN=mean)
+```
+
+
+
+
+

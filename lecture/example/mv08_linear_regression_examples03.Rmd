@@ -1,0 +1,252 @@
+---
+title: "Examples of Linear Regressions (Part II)"
+author: "Le Wang"
+output: beamer_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## An Application: Advertising Budget and Sales
+
+
+Suppose that we have a budget of \$ $100,000$ for advertising. How shoul I, as a manager, decide where to spend such money?
+
+1. On TV?
+2. On Radio?
+3. On Newspapaer?
+4. On social media? How will the impact be even measured?
+
+## An Application: Advertising Budget and Sales
+
+
+We need to have a well-defined objective before we even think about spending and conducting any empirical analysis. 
+
+One important \textbf{goal}: Sales of a Product
+
+## An Application: Advertising Budget and Sales
+
+We are interested in predicting the sales for certain advertising budget
+
+  > - Q1. Is there a relationship between advertising budget and sales?
+  > - Q2. How strong is the relationship?
+  > - Q3. Which media contributes to sales? TV, Radio, or Newspaper
+  > - Q4. Can we use this to predict future sales?
+  
+Finally, we will introduce nonlinearity into our model
+
+  > - Q5. Is the relationship linear? (Nonlinearity)
+  > - Q6. Is there synergy among the advertising media? (interaction effects)
+  
+  
+## Goal
+
+Eventually we will use these estimates to decide on the budget allocations. 
+
+## Data
+
+The Advertising data set consists of the sales of that product in 200 different markets, along with advertising budgets for the product in each of those markets for three different media: TV, radio, and newspaper.
+
+
+## Data
+
+```{r}
+# 2. Tell R what the file name is.
+mydata <- read.table("data/Advertising.csv", header=TRUE, sep=",")
+head(mydata)
+```
+
+
+
+## Q1. Is there a relationship between advertising budget and sales?
+```{r}
+  lm(Sales ~ TV, data=mydata)
+```  
+
+  > - Answer: Yes. There exists a positive relationship. The more you spend on TV advertising the more sales.
+  > - More specifically,   an additional $1000 spent on TV advertising is associated with selling approximately 0.04754 additional units of the product.
+
+## Q2. How strong is the relationship? 
+
+If the evidence is weak, then one might argue that no money should be spent on advertising!
+
+***
+```{r,echo=FALSE}
+  fit<-lm(Sales ~ TV, data=mydata)
+  summary(fit)
+```
+
+## Q3. Which media contributes to sales?  TV, Radio, or Newspaper
+
+  > - Do all three media-TV, radio, and newspaper-contribute to sales, 
+  > - Do just one or two of the media contribute? 
+
+***
+
+To answer this question, we must find a way to separate out the individual (**marginal**) effects of each medium when we have spent money on all three media.
+
+
+  > - $\text{sales} = \beta_0 + \beta_1 \cdot \text{TV Budget} + \beta_2 \cdot \text{Radio} + \beta_3 \cdot \text{Newspaper} + \epsilon$
+  
+  > - R code:
+  
+  > - `lm(Sales ~ TV + Newspaper + Radio, data=mydata)`
+
+***
+
+```{r,echo=FALSE}
+  fit<-lm(Sales ~ TV + Newspaper + Radio, data=mydata)
+  summary(fit)
+```
+
+## Q3. Which media contributes to sales?  TV, Radio, or Newspaper
+
+Both TV and Radio contribute to sales, but not Newspaper. If anything, Newspaper budget even reduces sales. 
+
+## Q4. Can we use this to predict future sales?
+
+```{r message=FALSE}
+library(fpp)
+```
+
+## Q4. Can we use this to predict future sales?
+Suppose that according to our analysis, our company decides to spend a total of $100,000$ (thousands) dollars on advertising, $80,000$ (thousands) on radio, $20,000$ (thousands) on TV, and $0$ on newspapers. 
+
+$$\text{forecast} = `r fit$coefficients[1]` + `r fit$coefficients[2]` \cdot 20000   `r fit$coefficients[3]` \cdot 0  + `r fit$coefficients[4]` \cdot 80000$$
+
+  
+  > - $\text{forecast} = 16000.63$
+
+
+***
+```{r message=FALSE}  
+    forecast(fit, newdata=data.frame(TV=20000,Newspaper=0,Radio=80000))
+```
+
+  > - Point forecast: $16000.63$
+  > - Interval forecast at 80 percent confidence level: [$15115.57, 16885.7$]
+  > - Interval forecast at 95 percent confidence level: [$14643.23, 17358.04$]
+  
+  
+## Marketing Example: Is there any synergy effect?
+
+```{r size='tiny'}
+fit<-lm(Sales ~ TV + Newspaper + Radio + Radio*TV, data=mydata)
+summary(fit)
+```
+
+## Marketing Example: Is there any synergy effect?
+
+```{r size='tiny'}
+lm(Sales ~ TV + Newspaper + Radio + Radio*TV, data=mydata)
+```
+
+$$
+\begin{aligned}
+\text{Sales} & = 6.728412 + 0.019067\cdot \text{TV} + 0.001444 \cdot \text{Newspaper} \\
+             & +0.027992\cdot \text{Radio} + 0.001087 \cdot \text{TV}\cdot\text{Radio} + \epsilon
+\end{aligned}
+$$
+
+
+
+## What does this model tell us?
+
+$$
+\begin{aligned}
+\text{Sales} & = 6.728412 + 0.019067\cdot \text{TV} + 0.001444 \cdot \text{Newspaper} \\
+             & +0.027992\cdot \text{Radio} + 0.001087 \cdot \text{TV}\cdot\text{Radio} + \epsilon
+\end{aligned}
+$$
+
+  > - Scenario 1: TV = 100,000  $\text{Sales} = 6.728412 + 0.019067*100000 = 1913.428$
+  > - Scenario 2: Radio = 100,000  $\text{Sales} = 6.728412 + 0.027992*100000 = 2805.928$
+  > - Scenario 3: TV = 20,000 and Radio = 80,000
+  > - $$
+      \begin{aligned}
+      \text{Sales} & = 6.728412 + 0.019067*20000 + 0.027992*80000 \\
+                   & + 0.001087*80000*20000 = 1,741,827
+      \end{aligned}
+      $$
+      
+      
+## How to allocate my budget?
+
+Turning back to my final goal: How to allocate my budget?
+
+In the absence of synergy effects: What should you do?
+
+In the presence of synergy effects: What should you do?
+
+## How to allocate my budget?
+
+**Optimal Weight**
+
+\bigskip
+
+$$
+(w\cdot A)\cdot \beta_{TV} + (1-w)\cdot A\cdot \beta_{Radio} + w\cdot A \cdot (1-w)\cdot A \beta_{TV\*Radio}
+$$
+
+We would like to choose $w$ to maximize the impact on sales
+
+## How to allocate my budget?
+
+**Optimal Weight**
+
+\bigskip
+
+$$
+\begin{aligned}
+0 & = \frac{\partial}{\partial w} [(w\cdot A)\cdot \beta_{TV} + (1-w)\cdot A \cdot \beta_{Radio} \\
+  & + w\cdot A\cdot (1-w)\cdot A \beta_{TV\*Radio}] \\
+  & = A\cdot \beta_{TV} - A\cdot \beta_{Radio} + A^2\beta_{TV\*Radio} - 2 w\cdot A^2\cdot \beta_{TV\*Radio} \\
+w  & = \frac{A\cdot \beta_{TV} - A\cdot \beta_{Radio} + A^2\beta_{TV\*Radio} }{2 w\cdot A^2\cdot \beta_{TV\*Radio}} \\
+   & = \frac{100*`r fit$coefficients[2]` - 100*`r fit$coefficients[4]` + 100^2* `r fit$coefficients[5]`}{2*100^2`r fit$coefficients[5]`} \\
+   & = `r (100*fit$coefficients[2]- 100*fit$coefficients[4]+ 10000*fit$coefficients[5])/(2*10000*fit$coefficients[5])`
+\end{aligned}
+$$
+
+
+
+## How to allocate my budget?
+
+Let's try different combinations:
+
+$$
+\begin{aligned}
+\text{Sales} & = `r fit$coefficients[1]` + 0.4*100*`r fit$coefficients[2]` + 0*100*`r fit$coefficients[3]` \\
+            &  + 0.6*100*`r fit$coefficients[4]` + 0.4*0.6*100^2*`r fit$coefficients[5]` \\
+   & = `r fit$coefficients[1]+ 0.4*100*fit$coefficients[2] + 0*100*fit$coefficients[3]+ 0.6*100*fit$coefficients[4]+ 0.4*0.6*100^2*fit$coefficients[5]`
+\end{aligned}
+$$
+
+
+$$
+\begin{aligned}
+\text{Sales} & = `r fit$coefficients[1]` + 0.6*100*`r fit$coefficients[2]` + 0*100*`r fit$coefficients[3]` \\
+            &  + 0.4*100*`r fit$coefficients[4]` + 0.4*0.6*100^2*`r fit$coefficients[5]` \\
+   & = `r fit$coefficients[1]+ 0.6*100*fit$coefficients[2] + 0*100*fit$coefficients[3]+ 0.4*100*fit$coefficients[4]+ 0.4*0.6*100^2*fit$coefficients[5]`
+\end{aligned}
+$$
+
+
+
+```{r echo=FALSE}
+w<-(100*fit$coefficients[2]- 100*fit$coefficients[4]+ 10000*fit$coefficients[5])/(2*10000*fit$coefficients[5])
+```
+$$
+\begin{aligned}
+\text{Sales} & = `r fit$coefficients[1]` + `r w`*100*`r fit$coefficients[2]` + 0*100*`r fit$coefficients[3]` \\
+            &  + `r (1-w)`*100*`r fit$coefficients[4]` + `r w*(1-w)`*100^2*`r fit$coefficients[5]` \\
+   & = `r fit$coefficients[1]+ w*100*fit$coefficients[2] + 0*100*fit$coefficients[3]+ (1-w)*100*fit$coefficients[4]+ w*(1-w)*100^2*fit$coefficients[5]`
+\end{aligned}
+$$
+
+
+
+
+
+
+

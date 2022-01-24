@@ -1,0 +1,143 @@
+---
+title: "Linear Regression and Prediction and Partial Effects (Multivalued Discrete Predictor)"
+output: html_document
+---
+
+
+This program illustrates why linear regression fails to deliver the CEF and how to remedy it. 
+
+## Part I
+
+```{r}
+wagedata <- read.csv("data/wage2.csv") 
+attach(wagedata)
+results <- lm(wage ~ married + black,data=wagedata)
+summary(results)
+
+```
+
+Let's produce the predictions
+
+```{r}
+# How many groups do we have?
+new<-data.frame(married=c(0,1,0,1),black=c(0,0,1,1))
+new
+predict(results,new)
+```
+
+
+What is the CEF?
+
+```{r}
+cef<-aggregate(wage,by=list(married,black),FUN=mean)  
+cef
+```
+
+Are they the same? No! Which model generates better predictions? Lets obtain the fitted (predicted values) using the linear regression results
+
+```{r}
+wagedata$yhat_lm  <- fitted(results)
+View(wagedata)
+```
+
+
+```{r}
+wagedata$yhat_cef <- NA 
+wagedata$yhat_cef[married==0 & black == 0] <- cef[1,3] 
+wagedata$yhat_cef[married==1 & black == 0] <- cef[2,3] 
+wagedata$yhat_cef[married==0 & black == 1] <- cef[3,3] 
+wagedata$yhat_cef[married==1 & black == 1] <- cef[4,3]
+View(wagedata)
+```
+
+
+```{r}
+wagedata$error_lm  <- wagedata$wage - wagedata$yhat_lm 
+wagedata$error_cef <- wagedata$wage - wagedata$yhat_cef
+View(wagedata)
+```
+
+
+```{r}
+# Let's calculate mean squared prediction errors 
+mean((wagedata$error_lm)^2)       
+mean((wagedata$error_cef)^2) 
+```
+
+
+## Part II
+
+```{r}
+wagedata$x1<-(1-married)*(1-black)
+wagedata$x2<-married*(1-black)
+wagedata$x3<-(1-married)*black
+wagedata$x4<-married*black
+results<-lm(wage ~ x1+x2+x3+x4+0,data=wagedata)
+```
+
+```{r}
+new<-data.frame(x1=c(1,0,0,0), x2=c(0,1,0,0),x3=c(0,0,1,0),x4=c(0,0,0,1))
+new
+```
+
+```{r}
+predict(results,new)
+```
+
+
+```{r}
+aggregate(wage,by=list(married,black),FUN=mean) 
+```
+
+
+## Part III
+
+```{r}
+results<-lm(wage~married*black,data=wagedata)
+summary(results)
+```
+
+
+```{r}
+new<-data.frame(married=c(0,1,0,1),black=c(0,0,1,1))
+new
+predict(results,new)
+```
+
+```{r}
+aggregate(wage,by=list(married,black),FUN=mean) 
+```
+
+
+## Part IV
+
+Let's look at how we can estimate 
+$$
+\mathbb{E}[\text{wages|married,black,urban}]
+$$
+
+```{r}
+aggregate(wage,by=list(married,black,urban), FUN=mean)
+```
+
+```{r}
+results<-lm(wage~married*black*urban,data=wagedata)
+results
+```
+
+```{r}
+new<-data.frame(married=c(0,1),black=c(0,1),urban=c(0,1))
+
+new<-data.frame(married=c(0,1,0,1,0,1,0,1),black=c(0,0,1,1,0,0,1,1),urban=c(0,0,0,0,1,1,1,1))
+new
+```
+
+```{r}
+predict(results,new)
+```
+
+```{r}
+aggregate(wage, by=list(married,black,urban), FUN=mean)
+```
+
+

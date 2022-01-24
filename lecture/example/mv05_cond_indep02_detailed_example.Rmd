@@ -1,0 +1,177 @@
+---
+title: "A Detailed Example of Ethnicity Prediction (R code)"
+author: "Le Wang"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+cnames<-read.csv("data/cnames.csv")
+FLvoters<-read.csv("data/FLvoters.csv")
+FLcensus<-read.csv("data/FLCensusVTD.csv")
+FLvoters <- FLvoters[!is.na(match(FLvoters$surname,cnames$surname)),]
+FLvoters<-na.omit(FLvoters)
+cnames$pctothers<-100-(cnames$pctapi+cnames$pctblack+cnames$pctwhite+cnames$pcthispanic)
+dim(FLvoters)
+
+```
+
+
+
+```{r}
+head(FLvoters)
+```
+
+---
+
+```{r}
+subset <- subset(FLvoters, surname == "PIEDRA")
+prop.table(table(subset$race))
+```
+
+
+```{r}
+subset <- subset(cnames, surname == "PIEDRA")
+subset
+```
+
+
+```{r, size='tiny'}
+subset
+max(subset[, c("pctwhite","pctblack","pctapi","pctaian","pct2prace","pcthispanic")])
+```
+
+```{r, size='tiny'}
+max(subset[, c("pctwhite","pctblack","pctapi","pctaian","pct2prace","pcthispanic")]) == subset$pctwhite
+```
+
+
+```{r}
+subset <- subset(FLvoters, surname == "PIEDRA" & county == 115 & VTD == 66)
+prop.table(table(subset$race))
+```
+
+
+```{r}
+head(cnames)
+```
+
+```{r}
+head(FLcensus)
+```
+
+
+```{r}
+subset <- subset(FLcensus, county == 115 & VTD == 66)
+subset
+```
+
+
+```{r}
+B <- subset[,"white"]
+```
+
+
+```{r}
+B.black <- subset[,"black"]
+B.hisp <- subset[,"hispanic"]
+B.api <- subset[,"api"]
+B.others <- subset[,"others"]
+```
+
+
+```{r}
+A.1 <- cnames[which(cnames$surname=="PIEDRA"), "pctwhite"]/100
+A.1
+```
+
+
+```{r}
+head(FLcensus)
+```
+
+
+```{r}
+race.prop <- apply(FLcensus[,c("white", "black", "api", "hispanic", "others")], 
+					2, 
+					weighted.mean, 
+					weights = FLCensus$total.pop)
+A.2 <- race.prop["white"]
+A.2
+```
+
+
+```{r}
+head(cnames)
+
+```
+
+---
+
+```{r}
+total.count<- sum(cnames$count)
+A.3 <- cnames[which(cnames$surname == "PIEDRA"),"count"]/total.count
+```
+
+
+
+```{r}
+A <- A.1*A.3/A.2
+A
+```
+
+
+---
+
+Repeat this process for all other racial groups
+
+```{r}
+A.1.black <- cnames[which(cnames$surname=="PIEDRA"), "pctblack"]/100
+A.1.hisp <- cnames[which(cnames$surname=="PIEDRA"), "pcthispanic"]/100
+A.1.api <- cnames[which(cnames$surname=="PIEDRA"), "pctapi"]/100
+A.1.others <- cnames[which(cnames$surname=="PIEDRA"), "pctothers"]/100
+
+A.2.black <- race.prop["black"]
+A.2.hisp <- race.prop["hispanic"]
+A.2.api <- race.prop["api"]
+A.2.others <- race.prop["others"]
+
+A.black <- A.1.black*A.3/A.2.black
+A.hisp <- A.1.hisp*A.3/A.2.hisp
+A.api <- A.1.api*A.3/A.2.api
+A.others <- A.1.others*A.3/A.2.others
+
+
+A.black
+A.hisp
+A.api
+A.others
+```
+
+
+```{r}
+residence <- subset(FLcensus, county== 115 & VTD ==66)
+residence
+```
+
+
+```{r}
+C <- A*residence["white"] + A.black*residence["black"] + A.hisp*residence["hispanic"]+ A.api*residence["api"]+A.others*residence["others"] 
+C
+```
+
+
+
+```{r}
+A*B/C
+```
+
+
+```{r}
+cond.prob <- c(A*B/C, A.black*B.black/C, A.hisp*B.hisp/C, A.api*B.api/C, A.others*B.others/C)
+names(cond.prob) <- c("white", "black", "hispanic", "api", "others")
+cond.prob
+```

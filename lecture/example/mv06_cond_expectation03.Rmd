@@ -1,0 +1,63 @@
+---
+title: "Linear Regression and Prediction and Partial Effects (Multivalued Discrete Predictor)"
+output: html_document
+---
+
+
+This program illustrates how to estimate linear regression and calculate the CEF for two different purposes
+We will again group them into three categories of education levels: Below high-school, high-school, and Above high-school
+
+```{r}
+wagedata <- read.csv("data/wage2.csv") 
+
+wagedata$education <- NA
+
+wagedata$education[educ<12] <- 1
+wagedata$education[educ==12] <- 2
+wagedata$education[educ>12] <- 3
+attach(wagedata)
+
+```
+
+What is the CEF?
+
+```{r}
+aggregate(wage,by=list(education),FUN=mean,data=wagedata)
+```
+
+$$
+\mathbb{E}[\text{wage} \mid \text{education}]=\begin{cases}
+774.2500 & \text{if educ =below high school}\\
+862.6718 & \text{if educ =high school}\\
+1076.0242 & \text{if educ =above high school}
+\end{cases}
+$$
+
+
+What is the impact of education on wages?
+
+1. 
+
+$$
+\mathbb{E}[\text{wage|education=high school}]-\mathbb{E}[\text{wage|education=below high school}]=862.67-774.2500=88.42
+$$
+
+
+
+2. 
+
+$$
+\mathbb{E}[\text{wage|education=above high school}]-\mathbb{E}[\text{wage|education=below high school}]=1076.02-774.2500=301.77
+$$
+
+```{r}
+# Linear Regression without intercept
+results <- lm(wage~factor(education)+0,data=wagedata)
+summary(results)
+```
+
+```{r}
+# Linear Regression without intercept
+results <- lm(wage~factor(education),data=wagedata)
+summary(results)
+```

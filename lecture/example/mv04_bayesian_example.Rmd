@@ -1,0 +1,112 @@
+---
+title: "An Illustration of Bayesian Estimation"
+output: html_notebook
+---
+
+This program illustrates an exmaple of Bayesian Estimation using R. This is adapted from Kruschke's book **Doing Bayesian Data Analysis**. 
+
+Recall the Bayesian Rule:
+
+$$
+f(\theta|x)=\frac{f(x|\theta)\cdot f(\theta)}{f(x)}
+$$
+
+Step 1. Let's define our prior
+
+$$
+f(\theta)
+$$
+
+
+```{r}
+  Theta <- c(.25, .5, .75)
+  Theta
+  
+# pTheta is the vector of prior probabilities on the theta values.
+
+  pTheta <- c(.25, .5, .25) # Makes a triangular belief distribution.
+  sum(pTheta) # Makes sure that beliefs sum to 1.  
+```
+
+Step 2. Let's look at our data (evidence)
+
+```{r}
+  Data <- c(rep(1,3),rep(0,9))
+  Data
+  nHeads <- sum( Data )
+  nTails <- length( Data ) - nHeads
+  
+  nHeads
+  nTails
+```
+
+What is the likelihood of evidence for each $\theta$
+
+$$
+f(x\mid \theta)
+$$
+
+
+```{r}
+  pDataGivenTheta = Theta^nHeads * (1-Theta)^nTails
+
+  pDataGivenTheta
+```
+
+What is the probability of our data?
+$$
+f(x)  =f(x|\theta_{1})\cdot p(\theta_{1})+f(x|\theta_{2})\cdot p(\theta_{2})+f(x|\theta_{3})\cdot p(\theta_{3}) 
+$$
+
+
+```{r}
+pData = sum( pDataGivenTheta * pTheta )
+pData
+```
+
+
+Step 3. Let's calculate the posterior for each $\theta$
+
+$$
+f(\theta|x)  =\frac{f(x|\theta)\cdot f(\theta)}{f(x)} 
+$$
+
+
+```{r}
+pThetaGivenData = pDataGivenTheta * pTheta / pData   
+pThetaGivenData
+```
+
+
+
+Step 4. Lets plot the prior, likelihood, and posterior
+
+```{r}
+# Plot the results.
+layout( matrix( c( 1,2,3 ) ,nrow=3 ,ncol=1 ,byrow=FALSE ) ) # 3x1 panels
+par(mar=c(3,3,1,0))         # number of margin lines: bottom,left,top,right
+par(mgp=c(2,1,0))           # which margin lines to use for labels
+par(mai=c(0.5,0.5,0.3,0.1)) # margin size in inches: bottom,left,top,right
+
+# Plot the prior:
+plot( Theta , pTheta , type="h" , lwd=3 , main="Prior" ,
+      xlim=c(0,1) , xlab=bquote(theta) ,
+      ylim=c(0,1.1*max(pThetaGivenData)) , ylab=bquote(p(theta)) ,
+      cex.axis=1.2 , cex.lab=1.5 , cex.main=1.5 , col="skyblue" )
+
+# Plot the likelihood:
+plot( Theta , pDataGivenTheta , type="h" , lwd=3 , main="Likelihood" ,
+      xlim=c(0,1) , xlab=bquote(theta) ,
+      ylim=c(0,1.1*max(pDataGivenTheta)) , ylab=bquote(paste("p(D|",theta,")")),
+      cex.axis=1.2 , cex.lab=1.5 , cex.main=1.5 , col="skyblue" )
+text( .55 , .85*max(pDataGivenTheta) , cex=2.0 ,
+      bquote( "D=" * .(nHeads) * "H," * .(nTails) * "T" ) , adj=c(0,.5) )
+
+# Plot the posterior:
+plot( Theta , pThetaGivenData , type="h" , lwd=3 , main="Posterior" ,
+      xlim=c(0,1) , xlab=bquote(theta) ,
+      ylim=c(0,1.1*max(pThetaGivenData)) , ylab=bquote(paste("p(",theta,"|D)")),
+      cex.axis=1.2 , cex.lab=1.5 , cex.main=1.5 , col="skyblue" )
+text( .55 , .85*max(pThetaGivenData) , cex=2.0 ,
+      bquote( "p(D)=" * .(signif(pData,3)) ) , adj=c(0,.5) )
+```

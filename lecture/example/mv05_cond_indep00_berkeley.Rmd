@@ -1,0 +1,88 @@
+---
+title: 'Conditional Independence: Berkeley Admission Data'
+author: "Le Wang"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(eikosograms)
+library(gridExtra)
+```
+
+
+## Visualization of Unconditional and Conditial Results
+
+The visualization example is drawn from [R. W. Oldford's example of eikosograms](https://cran.r-project.org/web/packages/eikosograms/vignettes/DataAnalysis.html) to understand probability and relations between categorical variates. 
+
+Two things stand out:
+
+1. Admission rates differ across gender
+2. However, admission rates also differ across departments
+
+
+
+```{r}
+e1 <- eikos(Admit ~ Gender, data = UCBAdmissions, 
+            yaxs = FALSE, xaxs = FALSE, 
+            draw = FALSE)
+e2 <- eikos(Admit ~ Dept, data = UCBAdmissions,  
+            yaxs = FALSE, xaxs = FALSE,
+            draw = FALSE)
+# Using the gridExtra package, draw these in a single plot
+grid.arrange(e1, e2, nrow = 1)
+```
+
+What if there is also a gender difference in the type of departments that prospective students apply to?
+
+```{r}
+eikos(Gender ~ Dept, data = UCBAdmissions, yprobs = seq(0,1,0.25), xaxs = FALSE)
+```
+
+
+
+Lets consider all three variables together
+
+```{r}
+eikos(Admit ~  Gender + Dept, data = UCBAdmissions,  
+      yaxs = FALSE, xaxs = FALSE, 
+      lock_aspect = FALSE, 
+      xlab_rot = 90, xvals_size = 8,
+      ispace = list(bottom = 15))
+```
+
+
+In all departments but C and E (which are near equal), a greater proportion of female applicants were accepted than males.
+
+## R Markdown
+
+Lets obtain a test of **unconditional independence**. First, lets obtain **joint distribution** (frequency counts)
+
+```{r}
+berkeley <- as.data.frame(UCBAdmissions)
+freq <- berkeley %>% 
+  group_by(Admit, Gender) %>% 
+  summarise(sum = sum(Freq))
+
+freq
+
+
+mytable <- xtabs(sum ~ Admit + Gender, data = freq)
+prop.table(mytable)
+
+```
+
+Second, we will perform the $\chi^2$ test of independence described before. 
+
+```{r}
+chisq.test(mytable)
+```
+
+Next, lets perform a test of **conditional independence**. Since we have data in the form of joint distribution already, where the extra dimension `department` is introduced, we are ready to directly perform the test on the obtained joint distribution. 
+
+```{r}
+mantelhaen.test(UCBAdmissions)
+
+```
+
