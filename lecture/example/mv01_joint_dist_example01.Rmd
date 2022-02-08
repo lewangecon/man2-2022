@@ -202,5 +202,30 @@ f <- kbvpdf (data$x, data$y, 0.7, 7)
 plot (f, TRUE, xlab="x", ylab="y")
 ```
 
+## Approach 1: 3-d Joint Density Function
+
+```{r}
+library(MASS)
+
+dens <- kde2d(data$x,data$y)
+
+persp(dens, phi = 30, theta = 80, expand = .9,
+      xlab = "X", ylab = "Y", zlab = "Z")
+
+```
+
+
+## Approach 2: Contour Plot
+
+```{r}
+ggplot(data = data, mapping = aes(x = x, y = y)) +
+  stat_density2d(mapping = aes(fill = ..level..),
+                 geom = "polygon",
+                 color = "white"
+                 )+
+  geom_vline(xintercept = 0, color = "red") +
+  geom_hline(yintercept = 4.975, color = "red") +
+  geom_vline(xintercept = 1.915, color = "red")
+```
 
 
