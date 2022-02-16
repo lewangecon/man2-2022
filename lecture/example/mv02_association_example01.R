@@ -20,7 +20,7 @@ spy_returns<- na.omit(diff(log(spy)))
 vxx<-VXX$VXX.Adjusted 
 vxx_returns <- na.omit(diff(log(vxx)))
 
-
+spy_returns <- spy_returns[c(1:1020),]
 
 # Covariance
 cov(spy_returns, vxx_returns)
