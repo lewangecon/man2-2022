@@ -121,7 +121,7 @@ head(dat)
 
 ```{r}
 # teapot in 3D
-scatterplot3d(dat[ , 1], dat[ , 2], dat[ , 3], highlight.3d = TRUE, angle = 75, pch = 19, lwd = 15, xlab = "", ylab = "", zlab = "", main = "teapot in 3D")
+scatterplot3d(dat[ , 1], dat[ , 2], dat[ , 3], highlight.3d = TRUE, angle = 95, pch = 19, lwd = 15, xlab = "", ylab = "", zlab = "", main = "teapot in 3D")
 ```
 
 Lets perform the PCA manually here. Since we are converting this to a 2-D graph, we will take only the first two eigenvectors or principal components. 
