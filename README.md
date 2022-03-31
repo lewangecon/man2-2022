@@ -46,7 +46,7 @@
 |         |         |                                                                                                                                           |                    | 
 | 18      | 3/21/22 | **Machine Learning (III)**: Bayes' Rule: Definition, Application, and Bayesian Estimation [details](summary/mv03_cond_dist03.md)          |                    | 
 |         |         |                                                                                                                                           |                    | 
-| 19      | 3/23/22 | **Machine Learning (III)**: Bayes' Rule: Definition, Application, and Bayesian Estimation [details](summary/mv03_cond_dist03.md)          |                    | 
+| 19      | 3/23/22 | **Machine Learning (III)**: Bayes' Rule: Definition, Application, and Bayesian Estimation [details](summary/mv03_cond_dist03.md)          |        [ps 3](ps/ps3.pdf)            | 
 |         |         |                                                                                                                                           |                    | 
 | 20      | 3/28/22 | **Machine Learning (IV)**: Conditional Independence, Naïve Bayes Classifier and Other Applications [details](summary/mv03_cond_dist04.md) |                    | 
 |         |         |                                                                                                                                           |                    | 
