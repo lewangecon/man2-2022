@@ -41,10 +41,18 @@ library(tidyr)
 # Let's get rid of all the stop words
   bigrams_filtered <- bigrams_separated %>%
     filter(!word1 %in% stop_words$word) %>%
-    filter(!word2 %in% stop_words$word)
+    filter(!word2 %in% stop_words$word) %>% 
+    filter(!is.na(word1)) %>% 
+    filter(!is.na(word2))
 
 # new bigram counts:
   bigram_counts <- bigrams_filtered %>% 
+    count(word1, word2, sort = TRUE)
+  
+# We would like to know whether there are other
+# instances where Miss Woodhouse appear  in the books
+  bigrams_filtered %>%
+    filter(word1 == "emma") %>% 
     count(word1, word2, sort = TRUE)
   
   bigram_counts
@@ -206,5 +214,8 @@ library(tidyr)
     filter(!word1 %in% stop_words$word,
            !word2 %in% stop_words$word,
            !word3 %in% stop_words$word) %>%
+    filter(!is.na(word1)) %>% 
+    filter(!is.na(word2)) %>% 
+    filter(!is.na(word3)) %>% 
     count(word1, word2, word3, sort = TRUE)  
   
