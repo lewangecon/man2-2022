@@ -54,7 +54,7 @@
 |         |         |                                                                                                                                           |                    | 
 | 22      | 4/4/22  | **Machine Learning (V)**: Conditional Expectation and Linear Regression [details](summary/mv04_cond_expectation01.md)                     |                    | 
 |         |         |                                                                                                                                           |                    | 
-| 23      | 4/6/22  | **Machine Learning (V)**: Conditional Expectation and Linear Regression [details](summary/mv04_cond_expectation01.md)                     |                    | 
+| 23      | 4/6/22  | **Machine Learning (V)**: Conditional Expectation and Linear Regression [details](summary/mv04_cond_expectation01.md)                     |              [ps 4 (R markdown)](ps/ps4.Rmd) ;[ps 4 (pdf)](ps/ps4.pdf)                        | 
 |         |         |                                                                                                                                           |                    | 
 | 24      | 4/11/22 | **Machine Learning (VI)**: Conditional Expectation, Nonparametric and Parametric Models [details](summary/mv04_cond_expectation02.md)     |                    | 
 |         |         |                                                                                                                                           |                    | 
