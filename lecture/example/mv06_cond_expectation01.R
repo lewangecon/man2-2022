@@ -18,6 +18,8 @@ attach(wagedata)
 # Approach 2:
   library(dplyr)
   
+  options(pillar.sigfig = 8)
+  
   wagedata %>% 
     group_by(married) %>% 
     summarise(mean = mean(wage,na.rm = TRUE))

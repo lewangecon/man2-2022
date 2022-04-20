@@ -38,6 +38,7 @@
 
 1. Slides: [here](../lecture/mv04_cond_expectation01.pdf)
 2. [R Example: calculate the CEF](../lecture/example/mv06_cond_expectation01.R)
+3. [R Example: Illustrate the Grid Search approach to numerical optimization](mv06_cond_expectation01b-numerical_optimization.R)
 3. [R Example: Linear Regression with binary variable](../lecture/example/mv06_cond_expectation02.Rmd)
 4. [R Example: Linear Regression with multi-valued variable](../lecture/example/mv06_cond_expectation03.Rmd)
 5. [R Example: Linear Regression with multiple discrete variables](../lecture/example/mv06_cond_expectation04.Rmd)
