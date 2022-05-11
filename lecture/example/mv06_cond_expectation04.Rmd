@@ -9,6 +9,7 @@ This program illustrates why linear regression fails to deliver the CEF and how 
 ## Part I
 
 ```{r}
+rm(list=ls())
 wagedata <- read.csv("data/wage2.csv") 
 attach(wagedata)
 results <- lm(wage ~ married + black,data=wagedata)
